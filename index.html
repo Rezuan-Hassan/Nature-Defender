@@ -2,25 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rezuan's Nature Defender</title>
     <style>
-        body { margin: 0; background: #111; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; overflow: hidden; }
-        canvas { display: block; margin: 10px auto; border: 3px solid #444; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); cursor: crosshair; }
-        #ui { padding: 10px; font-size: 20px; font-weight: bold; }
-        .controls { color: #888; font-size: 14px; }
-        #ultimate-bar { width: 200px; height: 10px; background: #333; margin: 5px auto; border-radius: 5px; overflow: hidden; }
-        #ultimate-fill { width: 0%; height: 100%; background: #00f2ff; transition: width 0.3s; }
+        body { margin: 0; background: #111; color: white; font-family: sans-serif; text-align: center; touch-action: none; }
+        canvas { display: block; margin: 0 auto; max-width: 100%; height: auto; border: 2px solid #555; }
+        #ui { padding: 10px; font-size: 18px; }
+        #ult-btn { 
+            position: fixed; bottom: 20px; right: 20px; 
+            width: 70px; height: 70px; border-radius: 50%; 
+            background: rgba(0, 242, 255, 0.3); border: 2px solid #00f2ff;
+            color: white; font-weight: bold; display: flex; 
+            align-items: center; justify-content: center;
+            user-select: none; -webkit-tap-highlight-color: transparent;
+        }
     </style>
 </head>
 <body>
-    <div id="ui">
-        Score: <span id="score">0</span> | 
-        Ultimate: [Spacebar]
-        <div id="ultimate-bar"><div id="ultimate-fill"></div></div>
-    </div>
+    <div id="ui">Score: <span id="score">0</span></div>
     <canvas id="gameCanvas"></canvas>
-    <p class="controls">Click to Shoot | Space to Clear Screen (When Full)</p>
+    <div id="ult-btn">ULT</div>
     <script src="script.js"></script>
 </body>
 </html>
