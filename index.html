@@ -2,26 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Rezuan's Nature Defender</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Nature Defender | Rezuan</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
-        body { margin: 0; background: #111; color: white; font-family: sans-serif; text-align: center; touch-action: none; }
-        canvas { display: block; margin: 0 auto; max-width: 100%; height: auto; border: 2px solid #555; }
-        #ui { padding: 10px; font-size: 18px; }
-        #ult-btn { 
-            position: fixed; bottom: 20px; right: 20px; 
-            width: 70px; height: 70px; border-radius: 50%; 
-            background: rgba(0, 242, 255, 0.3); border: 2px solid #00f2ff;
-            color: white; font-weight: bold; display: flex; 
-            align-items: center; justify-content: center;
-            user-select: none; -webkit-tap-highlight-color: transparent;
-        }
+        body { margin: 0; background: #000; color: white; font-family: sans-serif; text-align: center; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        canvas { display: none; margin: auto; background: #000; border: 1px solid #00ff88; }
+        #menu, #leaderboard-screen { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .btn { padding: 15px; background: #00ff88; color: black; border: none; border-radius: 10px; font-weight: bold; margin-top: 10px; width: 220px; font-size: 16px; }
+        input { padding: 12px; border-radius: 8px; border: 2px solid #00ff88; background: #222; color: white; margin-bottom: 10px; width: 200px; text-align: center; }
+        #ui { position: fixed; top: 10px; width: 100%; font-size: 18px; color: #00ff88; z-index: 5; display: none; }
+        #ult-btn { position: fixed; bottom: 30px; right: 30px; width: 80px; height: 80px; border-radius: 50%; background: rgba(0, 255, 136, 0.2); border: 2px solid #00ff88; color: white; display: none; align-items: center; justify-content: center; font-weight: bold; z-index: 10; }
+        table { width: 90%; max-width: 350px; margin-top: 15px; border-collapse: collapse; }
+        th, td { border-bottom: 1px solid #333; padding: 10px; }
     </style>
 </head>
 <body>
-    <div id="ui">Score: <span id="score">0</span></div>
+    <div id="menu">
+        <h1 style="color: #00ff88; letter-spacing: 2px;">NATURE DEFENDER</h1>
+        <input type="text" id="player-name" placeholder="ENTER NAME" maxlength="12">
+        <button class="btn" onclick="startGame()">START MISSION</button>
+        <button class="btn" style="background:transparent; color:#00ff88; border:1px solid #00ff88" onclick="showLeaderboard()">LEADERBOARD</button>
+    </div>
+
+    <div id="leaderboard-screen" style="display:none;">
+        <h2 style="color: #00ff88">TOP 10 DEFENDERS</h2>
+        <table id="leaderboard-table">
+            <thead><tr><th>#</th><th>NAME</th><th>SCORE</th></tr></thead>
+            <tbody id="leaderboard-body"></tbody>
+        </table>
+        <button class="btn" onclick="location.reload()">BACK TO MENU</button>
+    </div>
+
+    <div id="ui">Defender: <span id="display-name"></span> | Score: <span id="score">0</span></div>
     <canvas id="gameCanvas"></canvas>
     <div id="ult-btn">ULT</div>
+
     <script src="script.js"></script>
 </body>
 </html>
