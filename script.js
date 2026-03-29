@@ -1,4 +1,4 @@
-// 1. DATABASE CONFIG
+// 1. DATABASE CONFIGURATION
 const firebaseConfig = {
   apiKey: "AIzaSyAlhnlBYCcfRS2o1XeL01CzIxLbJPZjIRE",
   authDomain: "nature-defender-93281.firebaseapp.com",
@@ -10,6 +10,7 @@ const firebaseConfig = {
   databaseURL: "https://nature-defender-93281-default-rtdb.firebaseio.com"
 };
 
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
@@ -37,10 +38,10 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
-// 4. CORE LOGIC
+// 4. CORE GAME LOGIC
 function startGame() {
     const nameInput = document.getElementById('player-name').value;
-    if(!nameInput) return alert("Enter your name!");
+    if(!nameInput) return alert("Please enter your name!");
     playerName = nameInput.toUpperCase();
     
     if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
@@ -102,11 +103,17 @@ function update() {
     requestAnimationFrame(update);
 }
 
-// 5. DATA SYNC (REFIXED RANKING)
+// 5. DATA SYNC (FIXED RANKING & NUMBER TYPE)
 function endGame(msg) {
     gameOver = true;
-    alert(msg + " Score: " + score);
-    database.ref('leaderboard').push({ name: playerName, score: score }).then(() => {
+    alert(msg + " Final Score: " + score);
+    
+    // Convert score to Number to ensure mathematical sorting
+    database.ref('leaderboard').push({ 
+        name: playerName, 
+        score: Number(score),
+        timestamp: Date.now()
+    }).then(() => {
         location.reload(); 
     });
 }
@@ -115,16 +122,18 @@ function showLeaderboard() {
     document.getElementById('menu').style.display = "none";
     document.getElementById('leaderboard-screen').style.display = "flex";
     const body = document.getElementById('leaderboard-body');
-    body.innerHTML = "Loading Top Scores...";
+    body.innerHTML = "Fetching Top Scores...";
 
     database.ref('leaderboard').once('value', (snap) => {
         let items = [];
-        snap.forEach(c => { items.push(c.val()); });
+        snap.forEach(child => { 
+            items.push(child.val()); 
+        });
         
-        // SORT BY HIGHEST SCORE
+        // Mathematical sort: Highest score to Lowest
         items.sort((a, b) => b.score - a.score);
         
-        // TAKE TOP 10
+        // Filter to Top 10 only
         const top10 = items.slice(0, 10);
         
         body.innerHTML = top10.map((it, idx) => 
@@ -133,7 +142,7 @@ function showLeaderboard() {
     });
 }
 
-// 6. INPUTS
+// 6. INPUT CONTROLS
 function shoot(clientX, clientY) {
     if (!gameStarted || gameOver) return;
     const rect = canvas.getBoundingClientRect();
@@ -142,8 +151,15 @@ function shoot(clientX, clientY) {
     const angle = Math.atan2(y - player.y, x - player.x);
     projectiles.push({ x: player.x, y: player.y, vx: Math.cos(angle) * 12, vy: Math.sin(angle) * 12 });
 }
-canvas.addEventListener('touchstart', (e) => { e.preventDefault(); shoot(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
-window.addEventListener('mousedown', (e) => { if(e.target.id !== 'ult-btn') shoot(e.clientX, e.clientY); });
+
+canvas.addEventListener('touchstart', (e) => { 
+    e.preventDefault(); 
+    shoot(e.touches[0].clientX, e.touches[0].clientY); 
+}, {passive: false});
+
+window.addEventListener('mousedown', (e) => { 
+    if(e.target.id !== 'ult-btn') shoot(e.clientX, e.clientY); 
+});
 
 function spawnEnemy() {
     if (!gameOver && gameStarted) {
