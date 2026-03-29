@@ -1,4 +1,4 @@
-// 1. DATABASE CONNECTION
+// 1. DATABASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyAlhnlBYCcfRS2o1XeL01CzIxLbJPZjIRE",
   authDomain: "nature-defender-93281.firebaseapp.com",
@@ -17,17 +17,17 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const ultBtn = document.getElementById('ult-btn');
 
-// 2. ASSETS
+// 2. GAME ASSETS
 const playerImg = new Image(); playerImg.src = 'player.png';
 const enemyImg = new Image(); enemyImg.src = 'enemy.png';
 const bgImg = new Image(); bgImg.src = 'bg.jpg';
 const bombImg = new Image(); bombImg.src = 'https://cdn-icons-png.flaticon.com/512/567/567543.png';
 
-// 3. STATE
+// 3. GAME STATE
 let playerName = "Player";
 let player = { x: 0, y: 0, size: 60 };
 let projectiles = [], enemies = [], bombs = [];
-let score = 0, ultCharge = 0, gameOver = false, gameStarted = false;
+let score = 0, gameOver = false, gameStarted = false;
 
 function resize() {
     canvas.width = window.innerWidth;
@@ -37,11 +37,11 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
-// 4. GAME FUNCTIONS
+// 4. CORE LOGIC
 function startGame() {
-    const input = document.getElementById('player-name').value;
-    if(!input) return alert("Please enter your name!");
-    playerName = input.toUpperCase();
+    const nameInput = document.getElementById('player-name').value;
+    if(!nameInput) return alert("Enter your name!");
+    playerName = nameInput.toUpperCase();
     
     if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
 
@@ -71,7 +71,7 @@ function update() {
     ctx.drawImage(playerImg, player.x - 30, player.y - 30, player.size, player.size);
 
     bombs.forEach((b, i) => {
-        b.y += 2;
+        b.y += 2.5;
         ctx.drawImage(bombImg, b.x, b.y, b.size, b.size);
         projectiles.forEach((p) => {
             if (Math.hypot(p.x - (b.x + 25), p.y - (b.y + 25)) < 30) endGame("BOMB EXPLODED!");
@@ -80,7 +80,7 @@ function update() {
     });
 
     enemies.forEach((en, i) => {
-        en.y += 2 + (score/600);
+        en.y += 2 + (score/500);
         ctx.drawImage(enemyImg, en.x, en.y, en.size, en.size);
         if (en.y > canvas.height) endGame("NATURE BREACHED!");
 
@@ -102,10 +102,10 @@ function update() {
     requestAnimationFrame(update);
 }
 
-// 5. CLOUD SYNC
+// 5. DATA SYNC (REFIXED RANKING)
 function endGame(msg) {
     gameOver = true;
-    alert(msg + " Final Score: " + score);
+    alert(msg + " Score: " + score);
     database.ref('leaderboard').push({ name: playerName, score: score }).then(() => {
         location.reload(); 
     });
@@ -115,16 +115,25 @@ function showLeaderboard() {
     document.getElementById('menu').style.display = "none";
     document.getElementById('leaderboard-screen').style.display = "flex";
     const body = document.getElementById('leaderboard-body');
-    body.innerHTML = "Fetching data...";
+    body.innerHTML = "Loading Top Scores...";
 
-    database.ref('leaderboard').orderByChild('score').limitToLast(10).once('value', (snap) => {
+    database.ref('leaderboard').once('value', (snap) => {
         let items = [];
-        snap.forEach(c => items.push(c.val()));
-        items.reverse();
-        body.innerHTML = items.map((it, idx) => `<tr><td>${idx+1}</td><td>${it.name}</td><td>${it.score}</td></tr>`).join("");
+        snap.forEach(c => { items.push(c.val()); });
+        
+        // SORT BY HIGHEST SCORE
+        items.sort((a, b) => b.score - a.score);
+        
+        // TAKE TOP 10
+        const top10 = items.slice(0, 10);
+        
+        body.innerHTML = top10.map((it, idx) => 
+            `<tr><td>${idx+1}</td><td>${it.name}</td><td>${it.score}</td></tr>`
+        ).join("");
     });
 }
 
+// 6. INPUTS
 function shoot(clientX, clientY) {
     if (!gameStarted || gameOver) return;
     const rect = canvas.getBoundingClientRect();
@@ -139,6 +148,6 @@ window.addEventListener('mousedown', (e) => { if(e.target.id !== 'ult-btn') shoo
 function spawnEnemy() {
     if (!gameOver && gameStarted) {
         enemies.push({ x: Math.random() * (canvas.width - 50), y: -50, size: 50 });
-        setTimeout(spawnEnemy, Math.max(500, 1500 - (score/4))); 
+        setTimeout(spawnEnemy, Math.max(400, 1500 - (score/4))); 
     }
 }
