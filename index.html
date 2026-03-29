@@ -9,25 +9,26 @@
     <style>
         body { margin: 0; background: #000; color: white; font-family: sans-serif; text-align: center; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         canvas { display: none; margin: auto; background: #000; border: 1px solid #00ff88; }
-        #menu, #leaderboard-screen { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #menu, #leaderboard-screen { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .btn { padding: 15px; background: #00ff88; color: black; border: none; border-radius: 10px; font-weight: bold; margin-top: 10px; width: 220px; font-size: 16px; cursor: pointer; }
-        input { padding: 12px; border-radius: 8px; border: 2px solid #00ff88; background: #222; color: white; margin-bottom: 10px; width: 200px; text-align: center; }
-        #ui { position: fixed; top: 10px; width: 100%; font-size: 18px; color: #00ff88; z-index: 5; display: none; }
-        #ult-btn { position: fixed; bottom: 30px; right: 30px; width: 80px; height: 80px; border-radius: 50%; background: rgba(0, 255, 136, 0.2); border: 2px solid #00ff88; color: white; display: none; align-items: center; justify-content: center; font-weight: bold; z-index: 10; user-select: none; }
-        table { width: 90%; max-width: 350px; margin-top: 15px; border-collapse: collapse; }
-        th, td { border-bottom: 1px solid #333; padding: 10px; }
+        input { padding: 12px; border-radius: 8px; border: 2px solid #00ff88; background: #222; color: white; margin-bottom: 10px; width: 200px; text-align: center; font-size: 16px; }
+        #ui { position: fixed; top: 10px; width: 100%; font-size: 18px; color: #00ff88; z-index: 5; display: none; pointer-events: none; }
+        #ult-btn { position: fixed; bottom: 30px; right: 30px; width: 80px; height: 80px; border-radius: 50%; background: rgba(0, 255, 136, 0.2); border: 2px solid #00ff88; color: white; display: none; align-items: center; justify-content: center; font-weight: bold; z-index: 10; }
+        table { width: 100%; max-width: 350px; margin-top: 15px; border-collapse: collapse; }
+        th, td { border-bottom: 1px solid #333; padding: 12px; }
+        tr:nth-child(1) { color: #00ff88; font-weight: bold; font-size: 1.2em; }
     </style>
 </head>
 <body>
     <div id="menu">
         <h1 style="color: #00ff88; letter-spacing: 2px;">NATURE DEFENDER</h1>
-        <input type="text" id="player-name" placeholder="ENTER YOUR NAME" maxlength="12">
+        <input type="text" id="player-name" placeholder="ENTER NAME" maxlength="12">
         <button class="btn" onclick="startGame()">START MISSION</button>
         <button class="btn" style="background:transparent; color:#00ff88; border:1px solid #00ff88" onclick="showLeaderboard()">LEADERBOARD</button>
     </div>
 
     <div id="leaderboard-screen" style="display:none;">
-        <h2 style="color: #00ff88">TOP 10 DEFENDERS</h2>
+        <h2 style="color: #00ff88">GLOBAL TOP 10</h2>
         <table>
             <thead><tr><th>#</th><th>NAME</th><th>SCORE</th></tr></thead>
             <tbody id="leaderboard-body"></tbody>
