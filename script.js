@@ -1,4 +1,4 @@
-// 1. YOUR FIREBASE CONNECTION
+// 1. DATABASE CONNECTION
 const firebaseConfig = {
   apiKey: "AIzaSyAlhnlBYCcfRS2o1XeL01CzIxLbJPZjIRE",
   authDomain: "nature-defender-93281.firebaseapp.com",
@@ -27,7 +27,7 @@ const bombImg = new Image(); bombImg.src = 'https://cdn-icons-png.flaticon.com/5
 let playerName = "Player";
 let player = { x: 0, y: 0, size: 60 };
 let projectiles = [], enemies = [], bombs = [];
-let score = 0, gameOver = false, gameStarted = false;
+let score = 0, ultCharge = 0, gameOver = false, gameStarted = false;
 
 function resize() {
     canvas.width = window.innerWidth;
@@ -37,13 +37,12 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
-// 4. START MISSION
+// 4. GAME FUNCTIONS
 function startGame() {
     const input = document.getElementById('player-name').value;
-    if(!input) return alert("Enter your name!");
+    if(!input) return alert("Please enter your name!");
     playerName = input.toUpperCase();
     
-    // Request Fullscreen for mobile immersion
     if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
 
     document.getElementById('menu').style.display = "none";
@@ -71,19 +70,15 @@ function update() {
     ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
     ctx.drawImage(playerImg, player.x - 30, player.y - 30, player.size, player.size);
 
-    // BOMB HAZARDS
     bombs.forEach((b, i) => {
         b.y += 2;
         ctx.drawImage(bombImg, b.x, b.y, b.size, b.size);
         projectiles.forEach((p) => {
-            if (Math.hypot(p.x - (b.x + 25), p.y - (b.y + 25)) < 30) {
-                endGame("YOU HIT A BOMB!");
-            }
+            if (Math.hypot(p.x - (b.x + 25), p.y - (b.y + 25)) < 30) endGame("BOMB EXPLODED!");
         });
         if (b.y > canvas.height) bombs.splice(i, 1);
     });
 
-    // ENEMIES
     enemies.forEach((en, i) => {
         en.y += 2 + (score/600);
         ctx.drawImage(enemyImg, en.x, en.y, en.size, en.size);
@@ -97,21 +92,20 @@ function update() {
         });
     });
 
-    // PROJECTILES
     projectiles.forEach((p, i) => {
         p.x += p.vx; p.y += p.vy;
         ctx.fillStyle = '#00ff88';
         ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI * 2); ctx.fill();
-        if (p.y < 0) projectiles.splice(i, 1);
+        if (p.y < 0 || p.x < 0 || p.x > canvas.width) projectiles.splice(i, 1);
     });
 
     requestAnimationFrame(update);
 }
 
+// 5. CLOUD SYNC
 function endGame(msg) {
     gameOver = true;
-    alert(msg + " Score: " + score);
-    // Push score to Firebase
+    alert(msg + " Final Score: " + score);
     database.ref('leaderboard').push({ name: playerName, score: score }).then(() => {
         location.reload(); 
     });
@@ -121,7 +115,7 @@ function showLeaderboard() {
     document.getElementById('menu').style.display = "none";
     document.getElementById('leaderboard-screen').style.display = "flex";
     const body = document.getElementById('leaderboard-body');
-    body.innerHTML = "Loading...";
+    body.innerHTML = "Fetching data...";
 
     database.ref('leaderboard').orderByChild('score').limitToLast(10).once('value', (snap) => {
         let items = [];
@@ -131,7 +125,6 @@ function showLeaderboard() {
     });
 }
 
-// TOUCH INPUT
 function shoot(clientX, clientY) {
     if (!gameStarted || gameOver) return;
     const rect = canvas.getBoundingClientRect();
@@ -141,6 +134,7 @@ function shoot(clientX, clientY) {
     projectiles.push({ x: player.x, y: player.y, vx: Math.cos(angle) * 12, vy: Math.sin(angle) * 12 });
 }
 canvas.addEventListener('touchstart', (e) => { e.preventDefault(); shoot(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
+window.addEventListener('mousedown', (e) => { if(e.target.id !== 'ult-btn') shoot(e.clientX, e.clientY); });
 
 function spawnEnemy() {
     if (!gameOver && gameStarted) {
