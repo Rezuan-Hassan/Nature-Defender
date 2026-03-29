@@ -10,7 +10,6 @@ const firebaseConfig = {
   databaseURL: "https://nature-defender-93281-default-rtdb.firebaseio.com"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
@@ -18,11 +17,10 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const ultBtn = document.getElementById('ult-btn');
 
-// 2. GAME ASSETS
+// 2. ASSETS
 const playerImg = new Image(); playerImg.src = 'player.png';
 const enemyImg = new Image(); enemyImg.src = 'enemy.png';
 const bgImg = new Image(); bgImg.src = 'bg.jpg';
-const bombImg = new Image(); bombImg.src = 'https://cdn-icons-png.flaticon.com/512/567/567543.png';
 
 // 3. GAME STATE
 let playerName = "Player";
@@ -38,20 +36,17 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
-// 4. CORE GAME LOGIC
+// 4. CORE LOGIC
 function startGame() {
     const nameInput = document.getElementById('player-name').value;
-    if(!nameInput) return alert("Please enter your name!");
+    if(!nameInput) return alert("Enter your name!");
     playerName = nameInput.toUpperCase();
-    
     if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
-
     document.getElementById('menu').style.display = "none";
     document.getElementById('ui').style.display = "block";
     canvas.style.display = "block";
     ultBtn.style.display = "flex";
     document.getElementById('display-name').innerText = playerName;
-    
     gameStarted = true;
     resize();
     spawnEnemy();
@@ -61,7 +56,7 @@ function startGame() {
 
 function spawnBomb() {
     if (!gameOver && gameStarted) {
-        bombs.push({ x: Math.random() * (canvas.width - 50), y: -50, size: 50 });
+        bombs.push({ x: Math.random() * (canvas.width - 50), y: -50, size: 40 });
         setTimeout(spawnBomb, 5000 + Math.random() * 5000); 
     }
 }
@@ -71,11 +66,15 @@ function update() {
     ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
     ctx.drawImage(playerImg, player.x - 30, player.y - 30, player.size, player.size);
 
+    // DRAW BOMB EMOJI
     bombs.forEach((b, i) => {
         b.y += 2.5;
-        ctx.drawImage(bombImg, b.x, b.y, b.size, b.size);
+        ctx.font = "40px serif"; // Set emoji size
+        ctx.textAlign = "center";
+        ctx.fillText("💣", b.x + 20, b.y + 35); // Draw the 💣 icon
+        
         projectiles.forEach((p) => {
-            if (Math.hypot(p.x - (b.x + 25), p.y - (b.y + 25)) < 30) endGame("BOMB EXPLODED!");
+            if (Math.hypot(p.x - (b.x + 20), p.y - (b.y + 20)) < 25) endGame("BOMB EXPLODED!");
         });
         if (b.y > canvas.height) bombs.splice(i, 1);
     });
@@ -84,7 +83,6 @@ function update() {
         en.y += 2 + (score/500);
         ctx.drawImage(enemyImg, en.x, en.y, en.size, en.size);
         if (en.y > canvas.height) endGame("NATURE BREACHED!");
-
         projectiles.forEach((p, pi) => {
             if (Math.hypot(p.x - (en.x + 25), p.y - (en.y + 25)) < 30) {
                 enemies.splice(i, 1); projectiles.splice(pi, 1);
@@ -103,46 +101,32 @@ function update() {
     requestAnimationFrame(update);
 }
 
-// 5. DATA SYNC (FIXED RANKING & NUMBER TYPE)
+// 5. DATA & RANKING
 function endGame(msg) {
     gameOver = true;
-    alert(msg + " Final Score: " + score);
-    
-    // Convert score to Number to ensure mathematical sorting
+    alert(msg + " Score: " + score);
     database.ref('leaderboard').push({ 
         name: playerName, 
         score: Number(score),
         timestamp: Date.now()
-    }).then(() => {
-        location.reload(); 
-    });
+    }).then(() => { location.reload(); });
 }
 
 function showLeaderboard() {
     document.getElementById('menu').style.display = "none";
     document.getElementById('leaderboard-screen').style.display = "flex";
     const body = document.getElementById('leaderboard-body');
-    body.innerHTML = "Fetching Top Scores...";
-
+    body.innerHTML = "Loading...";
     database.ref('leaderboard').once('value', (snap) => {
         let items = [];
-        snap.forEach(child => { 
-            items.push(child.val()); 
-        });
-        
-        // Mathematical sort: Highest score to Lowest
+        snap.forEach(c => { items.push(c.val()); });
         items.sort((a, b) => b.score - a.score);
-        
-        // Filter to Top 10 only
         const top10 = items.slice(0, 10);
-        
-        body.innerHTML = top10.map((it, idx) => 
-            `<tr><td>${idx+1}</td><td>${it.name}</td><td>${it.score}</td></tr>`
-        ).join("");
+        body.innerHTML = top10.map((it, idx) => `<tr><td>${idx+1}</td><td>${it.name}</td><td>${it.score}</td></tr>`).join("");
     });
 }
 
-// 6. INPUT CONTROLS
+// 6. CONTROLS
 function shoot(clientX, clientY) {
     if (!gameStarted || gameOver) return;
     const rect = canvas.getBoundingClientRect();
@@ -151,15 +135,8 @@ function shoot(clientX, clientY) {
     const angle = Math.atan2(y - player.y, x - player.x);
     projectiles.push({ x: player.x, y: player.y, vx: Math.cos(angle) * 12, vy: Math.sin(angle) * 12 });
 }
-
-canvas.addEventListener('touchstart', (e) => { 
-    e.preventDefault(); 
-    shoot(e.touches[0].clientX, e.touches[0].clientY); 
-}, {passive: false});
-
-window.addEventListener('mousedown', (e) => { 
-    if(e.target.id !== 'ult-btn') shoot(e.clientX, e.clientY); 
-});
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); shoot(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
+window.addEventListener('mousedown', (e) => { if(e.target.id !== 'ult-btn') shoot(e.clientX, e.clientY); });
 
 function spawnEnemy() {
     if (!gameOver && gameStarted) {
